@@ -1,0 +1,770 @@
+# NHL Power Ranking — full context
+
+> NHL power rankings, head-to-head game projections, market edges, and season simulations from the RagLab power model, exposed to AI clients through a read-only MCP server (Streamable HTTP).
+
+- Site: https://sports.raglab.services
+- MCP endpoint: https://sports.raglab.services/mcp (POST, Streamable HTTP; bearer API key)
+- Agent card: https://sports.raglab.services/.well-known/agent-card.json
+- Server: nhl-power-ranking v2.1.0, contract schema v1.0.0, streamable-http
+- Catalog: 47 tools, 7 prompts, 3 resources
+- Repository: https://github.com/raglab-ca/sports
+- Envelope: every successful tool returns { schemaVersion, data, meta, evidence }; list tools add meta.pagination with an opaque nextCursor.
+
+## Key pages
+
+- [Power rankings](https://sports.raglab.services/rankings/nhl): all 32 teams by model score with day, week, and month movement.
+- [NHL vs standings divergence](https://sports.raglab.services/rankings/nhl-vs-standings): where the model disagrees with the record.
+- [Playoff probabilities](https://sports.raglab.services/playoffs/probabilities): projected standings and qualification odds.
+- [Schedule strength](https://sports.raglab.services/schedule-strength): remaining opponent difficulty, toughest first.
+- [Team pages](https://sports.raglab.services/teams): one page per NHL team under /teams/{slug}.
+- [Game analytics](https://sports.raglab.services/games): one page per stored game under /games/{date}/{away}-vs-{home}.
+- [Developer documentation](https://sports.raglab.services/developers): API keys, client setup, and the interactive tool reference.
+
+## Server instructions
+
+NHL Power Ranking MCP server. Read-only access to a versioned NHL power model, cohort/profile analytics, player dossiers and Power Above Average, metric histories, counterfactual H2H scenarios, sampled market history, official game evidence, odds, standings, schedules, and season simulations.
+
+Data notes:
+- Seasons are 8-digit ids (20252026 = the 2025-26 season); omit the season argument for the current one.
+- Team codes are official NHL tri-codes (TOR, MTL, NYR). Call list_teams to resolve or verify codes.
+- Every successful tool uses the same envelope: schemaVersion, data, meta, and evidence. Check meta.asOf, meta.completeness, and meta.warnings before relying on a result.
+- Power rankings and breakdowns are stored as dated daily snapshots. Stored rows are not model-version stamped; Phase 2 analyses use the current metric registry only for selector validation and directional metadata.
+- Model scores are snapshot-relative. Similarity, cohort, and outlier results are descriptive rather than causal.
+- project_scenario is an explicit H2H counterfactual. It does not recompute power-model scores or invent rest penalties.
+- get_market_history contains locally sampled source revisions, not every provider tick or a guaranteed closing line.
+- get_game_evidence, get_live_game, get_game_situation, get_live_edge, and get_pregame_availability read official NHL or third-party feeds on demand; live snapshots can change between calls and are process-cached rather than durably stored.
+- Metric statuses matter: "real" is official NHL data, "proxy" is a documented substitute, and "none" is unavailable and scored neutral.
+- Power Above Average (PAA) is a marginal counterfactual: the team re-scored with the player replaced by the league-average player of his cohort. One value is stored per player per season; goaltenders and small-sample players are withheld with explicit reasons.
+- List tools that can exhaust their result return meta.pagination with an opaque nextCursor.
+- Value-bet edges are model-derived and informational, never guaranteed.
+
+Suggested analytical flow: compare_cohorts or find_similar_teams to discover cohorts, find_metric_outliers to inspect unusual metric values, get_metric_history or explain_power_change for attribution, get_team_power_breakdown for methodology, get_team_metrics or get_schedule_strength for team context, get_player_profile or get_team_paa for player-level value, project_scenario for an explicit counterfactual, get_game_evidence for event support, and get_market_history for sampled line movement. Read power-ranking://docs/metrics for the complete model manifest.
+
+## Tool catalog
+
+### Power model
+
+Power metrics, history, cohort, similarity, and outlier analysis
+
+#### `get_power_rankings` — Power rankings
+
+All 32 NHL teams ranked by the site's power model with score, 1-day/7-day/30-day score and rank changes, and the snapshot date.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_team_power_breakdown` — Team power breakdown
+
+Metric-by-metric breakdown behind one team's power score, including sections, weights, contributions, raw values, normalized scores, league ranks, differentials, and real/proxy/no-data status.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_metric_league` — Metric league table
+
+League-wide table for one power metric built from the latest stored team breakdowns: every team's raw value, formatted display, normalized score, league rank and section, best first, with the league average and top/bottom rows.
+
+Parameters:
+- `metric` (required) — Metric key from get_metric_definitions
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_power_matrix` — Power metric matrix
+
+One aligned power snapshot for all or selected teams. Returns rank, score, section scores, effective weights and contributions, and optionally every selected metric's raw value, normalized score, league rank, status, unit, and delta inputs.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026
+- `teams` (optional) — Team codes to include; defaults to every team
+- `sections` (optional) — Section keys to include; defaults to all sections
+- `metrics` (optional) — Metric keys to include when includeMetrics is true
+- `includeMetrics` (optional) — Include selected leaf metrics; defaults to false
+- `includeRaw` (optional) — Include raw metric values; defaults to true
+
+#### `compare_cohorts` — Compare power cohorts
+
+Compares two to six team cohorts across selected model scores or oriented raw metrics, with weighted differences, section drivers, coverage, overlap handling, and descriptive caveats.
+
+Parameters:
+- `season` (optional) — Season id such as 20262026
+- `cohorts` (required) — 
+- `comparisonMode` (optional) — 
+- `overlapPolicy` (optional) — 
+- `metricSelector` (optional) — 
+- `featureBasis` (optional) — 
+- `weighting` (optional) — 
+- `standardize` (optional) — 
+- `limit` (optional) — 
+- `cursor` (optional) — 
+
+#### `find_similar_teams` — Find similar power teams
+
+Finds teams with the closest selected power-profile values to a target team, using deterministic weighted distance, coverage, section drivers, and metric drivers.
+
+Parameters:
+- `season` (optional) — Season id such as 20262026
+- `target` (required) — Target team code, e.g. TOR
+- `candidateSelector` (optional) — 
+- `metricSelector` (optional) — 
+- `featureBasis` (optional) — 
+- `weighting` (optional) — 
+- `standardize` (optional) — 
+- `minCoverage` (optional) — 
+- `limit` (optional) — 
+- `cursor` (optional) — 
+
+#### `find_metric_outliers` — Find power metric outliers
+
+Finds unusual team-metric values using oriented raw values or model scores with robust MAD/IQR/sample-SD fallback statistics and deterministic result ordering.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026
+- `target` (optional) — One team to inspect; omit to inspect the full population
+- `metricSelector` (optional) — 
+- `featureBasis` (optional) — 
+- `method` (optional) — 
+- `threshold` (optional) — 
+- `minSample` (optional) — 
+- `side` (optional) — 
+- `excludeTarget` (optional) — 
+- `limit` (optional) — 
+- `cursor` (optional) — 
+
+#### `get_power_history` — Power score history
+
+Paginated daily power-score and rank history for one team from stored snapshots.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026
+- `days` (optional) — Default lookback when from/to are omitted
+- `from` (optional) — Inclusive YYYY-MM-DD lower bound
+- `to` (optional) — Inclusive YYYY-MM-DD upper bound
+- `limit` (optional) — Maximum points to return; default 50
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `get_metric_history` — Power metric history
+
+Paginated raw and normalized history for one validated power metric key.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `metric` (required) — Metric key from get_metric_definitions
+- `season` (optional) — Season id such as 20252026
+- `from` (optional) — Inclusive YYYY-MM-DD lower bound
+- `to` (optional) — Inclusive YYYY-MM-DD upper bound
+- `days` (optional) — Default lookback; defaults to 30 days
+- `limit` (optional) — Maximum points; default 50
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `get_section_history` — Power section history
+
+Paginated score, effective weight, contribution, factor, and league-range history for one power-model section.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `section` (required) — Section key from get_metric_definitions
+- `season` (optional) — Season id such as 20252026
+- `from` (optional) — Inclusive YYYY-MM-DD lower bound
+- `to` (optional) — Inclusive YYYY-MM-DD upper bound
+- `days` (optional) — Default lookback; defaults to 30 days
+- `limit` (optional) — Maximum points; default 50
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `explain_power_change` — Explain power-score change
+
+Compares the latest stored breakdown on or before two dates and decomposes the total, rank, section, and metric changes. The decomposition is descriptive, not causal proof.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `from` (optional) — Baseline YYYY-MM-DD; defaults to seven days before the latest snapshot
+- `to` (optional) — Comparison YYYY-MM-DD; defaults to the latest snapshot
+- `season` (optional) — Season id such as 20252026
+
+### Players & value
+
+Player dossiers, salary and contract value, and Power Above Average
+
+#### `get_player_profile` — Player profile
+
+Full dossier for one player: identity and bio, viewed-season line, prior NHL seasons, salary cap hit, contract value (PPV), injury status, and the stored Power Above Average row with its ledger.
+
+Parameters:
+- `playerId` (required) — NHL player id, e.g. 8478402
+- `team` (optional) — Team code to disambiguate a mid-season trade, e.g. EDM
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_team_paa` — Team power-above-average ladder
+
+One team's stored Power Above Average rows for a season: a ranked contributors ladder (best or worst first), a complete available-value lookup by player id, and every unscored player with the model's reason.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+- `order` (optional) — desc = best contributors (default); asc = the players dragging the team down
+- `limit` (optional) — Maximum leaderboard rows; default 10
+
+#### `get_paa_leaders` — League PAA leaders
+
+League-wide Power Above Average leaders for a season, ranked best (order=desc) or worst (order=asc), with pagination.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+- `order` (optional) — desc = top contributors (default); asc = bottom contributors
+- `limit` (optional) — Maximum leaders per page; default 10
+- `cursor` (optional) — Opaque cursor from the previous page
+
+### Teams
+
+Season games, metric and projection histories, and schedule strength
+
+#### `get_team_games` — Team season games
+
+One team's season game list (oldest first) with final state, opponent context, the stored post-game power score/rank and per-game deltas, plus the team's remaining-schedule strength.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_team_metrics` — Team metric trend history
+
+One team's per-metric and per-section score/raw history aligned to its games (oldest first, index-parallel), optionally filtered to selected metric and section keys.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+- `metrics` (optional) — Metric keys to include; defaults to every metric
+- `sections` (optional) — Section keys to include; defaults to every section
+
+#### `get_team_projections` — Team projection history
+
+One team's projected final standing and playoff odds per stored simulation (one row per date, oldest first).
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_schedule_strength` — League schedule strength
+
+Remaining-schedule strength for all teams, toughest first: games left, opponents counted, and the average current power score of those opponents.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+### Games & markets
+
+Projections, scenarios, official evidence, impacts, and market history
+
+#### `get_games` — Games for a date
+
+Stored game cards for one date: final or projected score, status, model win probabilities/odds, and sportsbook moneylines when available.
+
+Parameters:
+- `date` (optional) — YYYY-MM-DD (defaults to today)
+- `season` (optional) — Season id such as 20252026
+
+#### `get_game_analysis` — Game edge analysis
+
+Stored head-to-head analysis for one game: probabilities, scores, overtime split, model versus market odds, matchup edges, the fair-price scoreline ladder with risk tiers, and available pregame availability context. Set includeCategories=false for the lean payload without section category edges and metric-by-metric matchups.
+
+Parameters:
+- `gameId` (required) — Game id from get_games
+- `includeCategories` (optional) — Include section category edges and metric matchups from the latest stored breakdowns; defaults to true
+
+#### `project_matchup` — Project a matchup
+
+Runs the head-to-head engine for any two teams, scheduled or not, with expected and projected score, win probabilities, overtime split, and metric-by-metric adjusted matchups. Win probabilities come from a sequential 12x5-minute situational ensemble over the H2H base rates.
+
+Parameters:
+- `teamA` (required) — First team code (away orientation by default), e.g. TOR
+- `teamB` (required) — Second team code (home unless homeTeam is set), e.g. MTL
+- `homeTeam` (optional) — Which team gets home ice: a team code, or "none" for neutral site
+- `backToBackA` (optional) — First team played the previous day
+- `backToBackB` (optional) — Second team played the previous day
+- `season` (optional) — Season id such as 20252026
+
+#### `project_scenario` — Project a matchup scenario
+
+Runs the existing H2H engine on one immutable context for a baseline and an explicit counterfactual. Supports home advantage, back-to-back goalie selection, allowlisted H2H profile-rate multipliers, and absolute effective goalie save percentage, with reproducible report and profile diffs.
+
+Parameters:
+- `teamA` (required) — First team code, e.g. TOR
+- `teamB` (required) — Second team code, e.g. MTL
+- `homeTeam` (optional) — Home team code, or "none" for neutral; defaults to teamB
+- `season` (optional) — Season id such as 20262026
+- `baseline` (optional) — 
+- `scenario` (optional) — 
+
+#### `find_value_bets` — Find model-market disagreements
+
+Paginated scan of stored game projections against sportsbook moneylines, ranked by expected value with no-vig probability, edge, price, bookmaker, and adjustment status.
+
+Parameters:
+- `dateFrom` (optional) — YYYY-MM-DD lower bound; defaults to today
+- `dateTo` (optional) — YYYY-MM-DD upper bound; defaults to one day after dateFrom
+- `season` (optional) — Season id such as 20252026
+- `minEdgePct` (optional) — Minimum model edge in percentage points; default 2
+- `limit` (optional) — Maximum opportunities per page; default 20
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `get_game_impact` — Completed game power impact
+
+For a final game, compares the stored pre-game and post-game snapshots for both teams and reports score/rank change plus section and metric-level decomposition.
+
+Parameters:
+- `gameId` (required) — Game id from get_games
+
+#### `get_market_history` — Market price history
+
+Returns locally sampled two-sided NHL moneyline revisions for one game, optionally filtered by bookmaker and UTC date range, with provider update time, local observation time, coverage, and a clearly labeled legacy card fallback.
+
+Parameters:
+- `gameId` (required) — Game id from get_games
+- `bookmaker` (optional) — Exact bookmaker key, e.g. draftkings
+- `from` (optional) — Inclusive UTC observation date YYYY-MM-DD
+- `to` (optional) — Inclusive UTC observation date YYYY-MM-DD
+- `limit` (optional) — Maximum observations per page; default 100
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `get_game_evidence` — NHL game evidence
+
+Fetches official NHL landing, box-score, and play-by-play evidence for one game; normalizes events with stable IDs, filters and paginates chronologically, and reports component-level coverage and finality.
+
+Parameters:
+- `gameId` (required) — NHL game id
+- `eventTypes` (optional) — 
+- `periods` (optional) — 
+- `periodTypes` (optional) — 
+- `team` (optional) — Team code or numeric NHL team id
+- `playerId` (optional) — 
+- `playerRole` (optional) — 
+- `fromTime` (optional) — Lower time-remaining bound within each period, e.g. 05:00
+- `toTime` (optional) — Upper time-remaining bound within each period
+- `includeEventDetails` (optional) — Include source event details on returned events
+- `limit` (optional) — Maximum events per page; default 50
+- `cursor` (optional) — Opaque event cursor from the previous page
+
+### Live & pregame
+
+Live game state, situation model, commentary, live edges, and pregame availability
+
+#### `get_live_game` — Live game state
+
+Current live (or final) game state from the NHL feed: score, period, clock, shots, and the player box score with goalie lines when available. Set includeMetrics=true to also recompute the in-game matchup metrics from this game's play-by-play.
+
+Parameters:
+- `gameId` (required) — NHL game id from get_games
+- `includeMetrics` (optional) — Recompute in-game matchup metrics from this game's play-by-play; default true
+
+#### `get_game_situation` — Live game situation model
+
+Runs the live situation engine for an in-progress game: active situations, manpower overlays (PP/PP2/PK/4v4), win/regulation/OT/shootout/next-goal/comeback probabilities, the resumed 12-segment ensemble, in-game metric factors, and the live model-vs-market edge.
+
+Parameters:
+- `gameId` (required) — NHL game id from get_games
+
+#### `get_live_edge` — Live model-market edge
+
+Current live win probabilities scored against the stored market moneylines for an in-progress game, using the same fair-price and risk-tier rules as the pregame ladder. Market prices do not update in-game, so quote age is expected to be large and the result is provisional.
+
+Parameters:
+- `gameId` (required) — NHL game id from get_games
+
+#### `get_game_commentary` — Live game commentary
+
+Narrates the live situation portrait with the configured LLM: a one-sentence teaser and a full read, grounded strictly in the situation model's numbers. Cached per material state change.
+
+Parameters:
+- `gameId` (required) — NHL game id from get_games
+
+#### `get_pregame_availability` — Pregame availability
+
+Fetches the free pregame feeds for one game: announced starting goalies, injuries with top-6/top-4/line impact, projected line combinations, and the metric overrides those absences imply. Set includeLines=false to skip the line-combination scrape.
+
+Parameters:
+- `gameId` (required) — NHL game id from get_games
+- `includeLines` (optional) — Fetch projected line combinations (DailyFaceoff); default true
+
+### Standings
+
+Official tables, power standings, and the projected playoff picture
+
+#### `get_official_standings` — Official NHL standings
+
+Official NHL standings for a season: league table plus conference and division groupings, with wins, losses, OT losses, points, points percentage, goal differential, streaks and clinch indicators.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_power_standings` — Power standings
+
+The league table ordered by the power model: each team's stored power score, official points and rank, grouped into conferences and divisions with playoff-odds context when available.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+
+#### `get_playoff_bracket` — Playoff bracket
+
+The resolved playoff bracket for a season: seeds, first three rounds, the Final and the champion. Real backfilled results take precedence once complete; otherwise the bracket is the stored playoff ensemble projection.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+- `simulationId` (optional) — Stored playoff simulation id (defaults to the latest)
+
+#### `get_playoff_picture` — Projected playoff picture
+
+Playoff seeds by conference from the latest stored season simulation: top 3 per division plus 2 wildcards, each with projected final points, plus the first team out and the projected cut line. Use list_simulations to inspect a specific run.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026 (defaults to the current season)
+- `simulationId` (optional) — Simulation id (defaults to the latest run)
+
+### Simulations
+
+Stored season simulations, game by game
+
+#### `list_simulations` — List simulations
+
+Paginated stored season simulations, newest first, with as-of date, status, labels, and projected game count.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026; defaults to all seasons
+- `limit` (optional) — Maximum simulations per page; default 50
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `get_simulation` — Simulation details
+
+One stored simulation with every team's projected remaining and projected final record.
+
+Parameters:
+- `simulationId` (required) — Simulation id from list_simulations
+
+#### `get_simulation_games` — Simulation game results
+
+Paginated game-by-game results from one stored simulation, optionally filtered by team and inclusive date range.
+
+Parameters:
+- `simulationId` (required) — Simulation id from list_simulations
+- `team` (optional) — Only games involving this team code
+- `from` (optional) — YYYY-MM-DD lower bound, inclusive
+- `to` (optional) — YYYY-MM-DD upper bound, inclusive
+- `limit` (optional) — Maximum games per page; default 200
+- `cursor` (optional) — Opaque cursor from the previous page
+
+#### `get_projected_standings` — Projected standings
+
+Projected final league, conference, and division standings from one stored simulation.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026
+- `simulationId` (optional) — Simulation id; defaults to latest
+
+### NHL data
+
+Base data ingested from the official NHL APIs
+
+#### `list_teams` — List NHL teams
+
+All teams for a season with identity, conference, division, logo, and current record.
+
+Parameters:
+- `season` (optional) — Season id such as 20252026
+
+#### `get_team_stats` — Team season stats
+
+Official NHL season reports and player lines for one team. Team reports can be disabled when only player or record fields are needed.
+
+Parameters:
+- `team` (required) — Team code, e.g. BOS
+- `season` (optional) — Season id such as 20252026
+- `includeTeamReports` (optional) — Include raw NHL team reports; defaults to true
+- `includePlayers` (optional) — Include skater and goalie stats; defaults to true
+- `maxSkaters` (optional) — Skater rows to include; default 12
+
+#### `get_team_roster` — Team roster
+
+Current club roster merged with target-season skater and goalie lines, player bios, and persisted injury status.
+
+Parameters:
+- `team` (required) — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026
+
+#### `get_schedule` — Schedule and rest context
+
+Paginated preseason/regular-season schedule with UTC start times, prior/next games, rest days and hours, back-to-back flags, surrounding opponents, and opponent power rank/score.
+
+Parameters:
+- `team` (optional) — Only games involving this team code
+- `season` (optional) — Season id such as 20252026
+- `from` (optional) — YYYY-MM-DD lower bound; defaults to the next 14 days
+- `to` (optional) — YYYY-MM-DD upper bound; defaults to 14 days after from
+- `limit` (optional) — Maximum games per page; default 200
+- `cursor` (optional) — Opaque cursor from the previous page
+
+### News
+
+Aggregated NHL headlines by team and player
+
+#### `get_news` — NHL news
+
+Stored NHL headlines from the aggregated public feeds, newest first, optionally narrowed to one team or player. Each item carries the teams and players it was linked to at ingest.
+
+Parameters:
+- `team` (optional) — Only headlines linked to this team code, e.g. BOS
+- `playerId` (optional) — Only headlines linked to this NHL player id
+- `limit` (optional) — Maximum items per page; default 20
+- `days` (optional) — Lookback window in days; default 14
+
+### Reference
+
+Algorithm definitions and season metadata
+
+#### `get_metric_definitions` — Metric definitions
+
+Complete versioned definitions for all 78 power metrics, including exact formula, unit, source, window, cadence, direction, sample guidance, missing-value behavior, proxy caveats, weights, normalization, aggregation, and opponent adjustment.
+
+Parameters: none.
+
+#### `get_model_manifest` — Power model manifest
+
+Machine-readable manifest for the current power model version: all 78 metric definitions, section and subsection weights, normalization, aggregation, fixed-point opponent adjustment, dynamic overtime reweighting, and model warnings.
+
+Parameters: none.
+
+#### `get_seasons` — Available seasons
+
+Seasons the system holds data for, with the current season id. Use a season id with any other tool to analyze a past season.
+
+Parameters: none.
+
+## Prompt library
+
+### `analyze-matchup` — Analyze a matchup
+
+Guided head-to-head analysis of two teams using the power model and h2h engine.
+
+Arguments:
+- `teamA` — First team code, e.g. TOR
+- `teamB` — Second team code, e.g. MTL
+- `homeTeam` (optional) — Which team is home, or "none" for neutral site
+
+### `find-value-bets` — Find value bets
+
+Scan upcoming games for model-market disagreements and explain the strongest opportunities.
+
+Arguments:
+- `date` (optional) — YYYY-MM-DD to scan
+
+### `team-deep-dive` — Team deep dive
+
+Full research report on one team's power, drivers, trend, roster, schedule, and outlook.
+
+Arguments:
+- `team` — Team code, e.g. TOR
+- `season` (optional) — Season id such as 20252026
+
+### `discover-team-archetypes` — Discover team archetypes
+
+Compare cohorts and find similar or unusual teams from the current power snapshot.
+
+Arguments:
+- `focus` (optional) — Optional analytical focus, e.g. penalty kill or top-nine talent
+
+### `player-deep-dive` — Player deep dive
+
+Full research report on one player's value, role, trend, and contract context.
+
+Arguments:
+- `playerId` — NHL player id, e.g. 8478402
+- `team` (optional) — Team code to disambiguate a trade, e.g. EDM
+- `season` (optional) — Season id such as 20252026
+
+### `live-game-brief` — Live game brief
+
+Situation-aware brief for an in-progress game: state, probabilities, edges, and commentary.
+
+Arguments:
+- `gameId` — NHL game id from get_games
+
+### `counterfactual-matchup` — Run a counterfactual matchup
+
+Compare a baseline H2H projection with explicit scenario assumptions.
+
+Arguments:
+- `teamA` — First team code
+- `teamB` — Second team code
+- `assumption` (optional) — Scenario assumption to evaluate
+
+## Resources
+
+- `power-ranking://docs/metrics` (application/json) — Version 1.4.0 manifest with every metric formula, source, weight, window, caveat, and model behavior.
+- `power-ranking://docs/glossary` (text/markdown) — Freshness, identifiers, model methodology and value-bet math.
+- `power-ranking://docs/tools` (text/markdown) — Every tool this server exposes, grouped by domain.
+
+The glossary below is the contents of the `power-ranking://docs/glossary` resource.
+
+## Data glossary
+
+# NHL Power Ranking data glossary
+
+## Freshness
+- Power scores and team breakdowns are stored as dated daily snapshots. Same-day rows can be updated, so absence of an asOf value does not prove unavailable data; inspect meta.generatedAt and evidence timestamps.
+- Simulations are generated at most once per season per day; each stored result is resolved from an internal ensemble of runs to its most representative outcome.
+- Game cards cover yesterday/today/tomorrow and expose the stored row update time. Market moneylines are attached only within a short upcoming window.
+- Raw NHL team/skater/goalie reports are cached and expose the upstream snapshot fetch time when available.
+- Every successful result uses schemaVersion 1.0.0 and includes freshness, completeness, warnings, and evidence fields in its envelope.
+
+## Identifiers
+- Season ids are 8 digits: 20252026 = the 2025-26 season.
+- Team codes are the official NHL tri-codes (TOR, MTL, NYR, ...). Use list_teams to resolve.
+- Dates are ISO YYYY-MM-DD and use the site's 4am-4am "snapshot day" for game cards.
+
+## Power model
+- The versioned manifest exposes all 78 metric formulas, units, sources, windows, update cadences, sample guidance, missing-value behavior, weights, normalization, opponent adjustment, and known caveats.
+- Metric status is real (official NHL data), proxy (documented stand-in) or none (unavailable and scored neutral 50).
+- Most leaf metrics use snapshot-relative league min-max normalization. A score of 50 is the conventional neutral/missing/degenerate value and can also be a legitimate midpoint; it is not universally the raw league average.
+- Opponent strength is a bounded multiplier on the other sections, so a strong schedule lifts a team and a weak one discounts it.
+
+## Player value (PAA, salary, PPV)
+- Power Above Average (PAA) is a marginal counterfactual: the same team power score re-evaluated with the player replaced by the league-average player of his cohort (forward or defenceman) at the incumbent's own games, ice time and special-teams opportunity.
+- PAA values are power-index points, not wins, and they do not sum to a team total; every row is an independent counterfactual.
+- There is one PAA value per player per season. A recompute replaces it; no versioned revisions are stored.
+- Goaltenders and players below the minimum opportunity floor are withheld with an explicit reason, reported in team and league results.
+- Salary is a curated, display-only cap-hit dataset. PPV is signed PAA per $1M of cap hit: a below-average player carries a negative PPV, and the value is informational only.
+
+## Head-to-head projections
+- project_matchup runs the h2h engine: even-strength rates, special teams, goaltending and shot quality are adjusted by opponent strength, then combined with a Poisson model; ties resolve to 3-on-3 overtime or a shootout using each team's win ratios.
+- Stored game analysis (get_game_analysis) uses the same engine with back-to-back detection and market odds attached.
+
+## Phase 2 power analytics
+- compare_cohorts compares aligned team cohorts using model scores or model-oriented raw values. It reports weighted differences and section/metric drivers.
+- find_similar_teams returns deterministic weighted profile distances with coverage and target exclusion.
+- find_metric_outliers uses oriented raw values by default and robust MAD with IQR/sample-SD fallback. Results are descriptive, not statistical significance tests.
+- Neutral metrics and opponent context are excluded by default. Missing values are never silently imputed to 50.
+
+## H2H scenarios
+- project_scenario compares a baseline and counterfactual on one immutable H2H context.
+- Supported assumptions are home advantage, existing back-to-back goalie selection, allowlisted H2H profile-rate multipliers, and absolute effective goalie save percentage.
+- Scenario overrides are hypothetical, do not recompute power-model scores, and do not create a generic rest penalty.
+
+## Market history
+- get_market_history returns locally sampled two-sided bookmaker observations. sourceUpdatedAt is the provider revision; observedAt is when this application received it.
+- History begins when collection starts, may omit provider ticks, and is not guaranteed to contain the official closing line.
+- A legacy current-card quote is returned separately when no durable observations exist and is not labeled as history.
+
+## Live and pregame
+- get_live_game, get_game_situation, get_live_edge, get_game_commentary, and get_pregame_availability read the official NHL feed (or third-party pregame feeds) on demand and are cached in process, not durably stored. Result freshness is the process cache revision, not an asOf timestamp.
+- Situation probabilities are model estimates for the remainder of the game and update with each feed revision; the situation model version is stamped in meta.modelVersion.
+- Live market edges are provisional: stored sportsbook prices are pregame quotes and do not update in-game, so quote age is expected to be large.
+- get_game_commentary narrates the situation model's structured portrait with the configured LLM; it adds no data and can lag the newest feed revision.
+- Pregame availability (starting goalies, injuries, projected lines) comes from fail-soft third-party scrapes; a missing source leaves its fields null.
+
+## Official game evidence
+- get_game_evidence reads the NHL landing, box-score, and play-by-play feeds on demand.
+- Events use upstream event IDs when available and deterministic best-effort IDs otherwise. Filters and cursors operate on normalized event order.
+- Component-level coverage distinguishes complete, limited, empty, and unavailable feeds.
+
+## Value bets
+- Model probability comes from the h2h win probability. Market probability is the sportsbook moneyline converted to decimal, normalized to remove the vig (both sides implied sum to 1).
+- edgePct = model probability - no-vig market probability, in percentage points.
+- expectedValuePct = expected profit per $1 staked at the quoted price, in percent.
+- Edges are informational, not betting advice; lines move and model inputs are estimates.
+
+## Projected standings & playoffs
+- get_projected_standings projects every remaining game with the h2h engine, feeding each projected result back into team records.
+- get_playoff_picture derives seeds from the latest simulation: top 3 per division plus 2 wildcards per conference, with the projected cut line.
+
+
+## Metric definitions (78 metrics, 7 sections)
+
+Power model v1.4.0. The entries below are the public definitions: what each metric represents, its unit, its direction, and its data status. Scoring formulas, normalization, aggregation, weights, data sources, and update internals are not published. Authenticated MCP clients can request the runtime manifest with `get_metric_definitions` or read the `power-ranking://docs/metrics` resource.
+
+- `capSpace` — Cap Space (frontOffice · status none · normalized score; no raw measurement · higher is better). Cap space is not available from the free NHL API used by production, so the metric is always neutral.
+- `depth` — Depth (frontOffice · status real · skaters · higher is better). Counts skaters with at least 20 points in the current target-season skater report.
+- `lineupStability` — Lineup Stability (frontOffice · status real · coefficient of variation · lower is better). Measures how uneven regular-skater participation is; less dispersion around the mean is better.
+- `experience` — Team Experience in Playoffs (frontOffice · status proxy · years · higher is better). Uses average derived NHL seasons of experience among regular skaters as a proxy for playoff experience.
+- `avgAge` — Player Average Age (frontOffice · status real · years · bell-shaped ideal). Uses the current calendar age of regular skaters and applies a bell-shaped score centered at the production ideal.
+- `avgHeight` — Team Average Height (frontOffice · status real · inches · higher is better). Averages the reported heights of regular skaters; taller is higher under the production direction.
+- `avgWeight` — Team Average Weight (frontOffice · status real · pounds · higher is better). Averages the reported weights of regular skaters; heavier is higher under the production direction.
+- `lineStability` — Line Stability (coaching · status proxy · games played · higher is better). Uses average games played by the top six forwards and top four defensemen as a proxy for stable core lines and pairs.
+- `wonCoachChallenges` — Won Coach Challenges (coaching · status none · normalized score; no raw measurement · higher is better). Won coach challenges are not exposed by the free NHL API used by production, so the metric is always neutral.
+- `emptyNetSuccess` — Empty-Net Goals per Game (Proxy) (coaching · status proxy · empty-net goals per game · higher is better). Uses empty-net goals per team game as the production proxy for empty-net success.
+- `comebackAfterTimeout` — Goals within 5 min after Coach Timeout (coaching · status real · goals · higher is better). Counts goals scored within five minutes after one of the team's own coach timeouts.
+- `first10MinutesGoals` — First 10 Minutes Goals For/Against (coaching · status real · ratio from 0 to 1 · higher is better). Measures the share of first-ten-minute regulation goals scored for the team.
+- `threePlusGoalRoutes` — 3+ Goal Routes (Blowout Losses) (coaching · status real · blowout losses · lower is better). Counts losses that were routes by at least three goals after removing the opponent's empty-net goals.
+- `top5Ratio` — Top 5 Players Production Ratio (offense / 5-on-5 · status real · ratio from 0 to 1 · higher is better). Measures the share of team skater points produced by the five highest-point skaters.
+- `top9Fwd` — Average Points Top 9 Forwards (offense / 5-on-5 · status real · points per forward · higher is better). Averages points among the nine highest-point forwards, with a single-game availability override when supplied.
+- `top4D` — Average Points Top 4 Defensemen (offense / 5-on-5 · status real · points per defenseman · higher is better). Averages points among the four highest-point defensemen, with a single-game availability override when supplied.
+- `bottom6Fwd` — Bottom-6 Forwards Points/Game (offense / 5-on-5 · status real · points per game per bottom-six forward · higher is better). Averages points per game among the forwards ranked 7-12 by ice time per game (the third and fourth lines), with a single-game availability override when supplied.
+- `bottomPairD` — Bottom-Pair Defensemen Points/Game (offense / 5-on-5 · status real · points per game per bottom-pair defenseman · higher is better). Averages points per game among the defensemen ranked 5-6 by ice time per game (the third pair), with a single-game availability override when supplied.
+- `shotsPerGame` — Shots / Game (offense / 5-on-5 · status real · shots on goal per game · higher is better). Uses official team shots on goal per game, with a play-by-play fallback for a new or incomplete season.
+- `scoringChances` — Scoring Chances / Game (offense / 5-on-5 · status real · scoring chances per game · higher is better). Counts all parsed play-by-play shot attempts—goals, shots on goal, missed shots, and blocked shots—whose production danger value is at least 0.1 and divides by games played.
+- `shotAttemptsPerGame` — Shot Attempts / Game (offense / 5-on-5 · status real · shot attempts per game · higher is better). Uses total shot attempts from the official realtime report, with a play-by-play fallback when the summary is unavailable.
+- `shotQuality` — Shot Quality (avg danger/attempt) (offense / 5-on-5 · status real · danger value per shot attempt · higher is better). Averages the production play-by-play danger value assigned to the team's shot attempts.
+- `plusMinus` — Plus/Minus Overall (offense / 5-on-5 · status real · plus/minus points · higher is better). Sums the plus/minus values of the team's skaters.
+- `offZoneTime` — Shot-Attempt Share (Off Zone Proxy) (offense / 5-on-5 · status proxy · shot-attempt share from 0 to 1 · higher is better). Uses shot-attempt share as the production proxy for time in the offensive zone.
+- `timeWithLead` — Time with the Lead (offense / 5-on-5 · status real · hours per game · higher is better). Averages regulation time spent holding a lead across the team's games.
+- `comeback2Plus` — Comebacks from 2+ Goal Deficit (offense / 5-on-5 · status real · comeback wins · higher is better). Counts wins after the team trailed by at least two goals.
+- `comebacks3rd` — Comebacks in 3rd Periods (offense / 5-on-5 · status real · comeback wins · higher is better). Counts wins after the team trailed during the third period.
+- `ppGoalsPerMin` — Goals / Powerplay Minute (offense / Powerplay · status real · powerplay goals per powerplay minute · higher is better). Measures powerplay goals per powerplay minute.
+- `ppPointsPerMin` — Points / Powerplay Minute (offense / Powerplay · status real · powerplay points per powerplay minute · higher is better). Measures powerplay points (goals plus assists) per powerplay minute. This is the creation half of the powerplay: goals alone score finishing, and the unit's best passer generates them without scoring them.
+- `ppTop5Ratio` — Top 5 Production Ratio vs Team (PP) (offense / Powerplay · status real · ratio from 0 to 1 · lower is better). Measures the share of team powerplay points produced by the five highest-point powerplay skaters; concentration is lower-is-better.
+- `ppTop2DRatio` — Top 2 Defensemen Production vs Team (PP) (offense / Powerplay · status real · ratio from 0 to 1 · lower is better). Measures the share of team powerplay points produced by the two highest-point defensemen; concentration is lower-is-better.
+- `shGoalsAgainst` — Shorthanded Goals Allowed (offense / Powerplay · status real · shorthanded goals against per game · lower is better). Measures shorthanded goals allowed—goals against while the opponent is shorthanded—per game; fewer is better.
+- `oppShotsPerGame` — Opponent Shots / Game (defense / 5-on-5 · status real · shots on goal against per game · lower is better). Measures shots on goal allowed per game, with a play-by-play fallback.
+- `goalAgainstPerGame` — Goals Against / Game (defense / 5-on-5 · status real · goals against per game · lower is better). Measures goals allowed per game, with a play-by-play fallback.
+- `oppTop9Fwd` — Opp Average Points Top 9 Forwards (defense / 5-on-5 · status real · opponent points per top-nine forward · higher is better). Computes the opponent-weighted average points per opponent top-nine forward using actual games played against each opponent when available.
+- `oppTop4D` — Opp Average Points Top 4 Defensemen (defense / 5-on-5 · status real · opponent points per top-four defenseman · higher is better). Computes the opponent-weighted average points per opponent top-four defenseman using actual games played against each opponent when available.
+- `oppScoringChances` — Opp Scoring Chances / Game (defense / 5-on-5 · status real · opponent scoring chances per game · lower is better). Measures opponent scoring chances allowed per game.
+- `oppShotAttemptsPerGame` — Opp Shot Attempts / Game (defense / 5-on-5 · status real · opponent shot attempts per game · lower is better). Measures opponent shot attempts allowed per game, with a play-by-play fallback.
+- `oppShotQuality` — Opponent Shot Quality (allowed) (defense / 5-on-5 · status real · danger value per allowed shot attempt · lower is better). Averages the production danger value of shot attempts allowed.
+- `oppPlusMinus` — Team Plus/Minus (Opponent Context; Audit) (defense / 5-on-5 · status real · negative plus/minus points · lower is better). Uses the negative of the team's skater plus/minus as raw input and then applies lower-is-better normalization.
+- `oppZoneTime` — Opponent Shot-Attempt Share (Zone Proxy) (defense / 5-on-5 · status proxy · opponent shot-attempt share from 0 to 1 · lower is better). Uses opponent shot-attempt share as the production proxy for opponent offensive-zone time.
+- `oppTimeWithLead` — Opp Time with the Lead (defense / 5-on-5 · status real · hours per game · lower is better). Averages regulation time the opponent spent holding a lead, which is the team's trailing time.
+- `oppComeback2Plus` — Opp Comebacks from 2+ Goal Deficit (defense / 5-on-5 · status real · opponent comeback wins · lower is better). Counts opponent wins after the opponent trailed by at least two goals against this team.
+- `oppComebacks3rd` — Opp Comebacks in 3rd Periods (defense / 5-on-5 · status real · opponent comeback wins · lower is better). Counts opponent wins after the opponent trailed during the third period against this team.
+- `backupGaa` — Auxiliary Goalie Goal Against Ratio (defense / 5-on-5 · status real · goals against average · lower is better). Uses the announced non-main goalie's GAA when available; otherwise weights backup goalies' GAA by games played.
+- `starterShare` — Primary Goalie Game Ratio (defense / 5-on-5 · status real · share from 0 to 1 · higher is better). Measures the starting goalie's share of team games started, with an announced alternate override.
+- `plusMinusDefense` — Team Plus/Minus (Defense Context; Duplicate) (defense / 5-on-5 · status real · plus/minus points · higher is better). Sums the team's skater plus/minus values in the defense section; higher is the production direction.
+- `bottom6FwdDefense` — Bottom-6 Forwards Plus/Minus per Game (defense / 5-on-5 · status real · plus/minus per game per bottom-six forward · higher is better). Averages plus/minus per game among the forwards ranked 7-12 by ice time per game (the third and fourth lines), with a single-game availability override when supplied.
+- `bottomPairDDefense` — Bottom-Pair Defensemen Plus/Minus per Game (defense / 5-on-5 · status real · plus/minus per game per bottom-pair defenseman · higher is better). Averages plus/minus per game among the defensemen ranked 5-6 by ice time per game (the third pair), with a single-game availability override when supplied.
+- `blockedShots` — Blocked Shots / Game (defense / 5-on-5 · status real · blocked shots per game · higher is better). Measures total blocked shots per game from the realtime team report.
+- `shutouts` — Shut Outs (defense / 5-on-5 · status real · shutouts · higher is better). Uses the team's total shutouts from the season summary.
+- `pkGoalsPerMin` — Goals Allowed / PK Minute (defense / Powerplay / Penalty Kill · status real · goals allowed per penalty-kill minute · lower is better). Measures goals allowed per penalty-kill minute.
+- `pkShotsPerMin` — Shorthanded Opportunities / PK Minute (Proxy) (defense / Powerplay / Penalty Kill · status proxy · shorthanded opportunities per penalty-kill minute · lower is better). Uses shorthanded opportunities per penalty-kill minute as the production proxy for shots allowed per penalty-kill minute.
+- `pkTime` — Penalty-Kill TOI per Game (Def Zone Proxy) (defense / Powerplay / Penalty Kill · status proxy · penalty-kill seconds per game · lower is better). Uses penalty-kill ice time per game as the production proxy for time in the defensive zone on the penalty kill.
+- `pkBlockedShots` — Blocked Shots / Game (PK) (defense / Powerplay / Penalty Kill · status proxy · blocked shots per game scaled to PK workload · higher is better). Scales total blocked shots per game by the team's penalty-kill share of its three major special-team/5-on-5 time components.
+- `shGoalsFor` — Shorthanded Goals Scored (defense / Powerplay / Penalty Kill · status real · shorthanded goals · higher is better). Uses total shorthanded goals scored across the target season.
+- `otWinRatio` — OT Win Ratio (wins / opportunities) (overtime / 3-on-3 · status real · production ratio from 0 to 1 · higher is better). Measures OT-only wins over a denominator that still includes standing overtime losses, which may include shootout losses.
+- `otTop3GoalShare` — Goals by Top 3 Players / Whole Team (OT) (overtime / 3-on-3 · status real · ratio from 0 to 1 · higher is better). Measures the share of team overtime goals scored by its top three overtime scorers.
+- `otDifferentScorers` — Number of Different Goal Scorers (OT) (overtime / 3-on-3 · status real · players · higher is better). Counts distinct players with a recorded overtime goal.
+- `otShots` — Shots / OT (overtime / 3-on-3 · status real · OT shot-on-goal events per overtime game, excluding goals · higher is better). Measures OT shot-on-goal events for per overtime game; goals are excluded by the current parser.
+- `otShotsAgainst` — Shots Against / OT (overtime / 3-on-3 · status real · OT shot-on-goal events against per overtime game, excluding goals · lower is better). Measures OT shot-on-goal events against per overtime game; goals are excluded by the current parser.
+- `otOffZoneTime` — Time in Offensive Zone / OT Game (overtime / 3-on-3 · status none · normalized score; no raw measurement · higher is better). Time in the offensive zone per overtime game is not exposed by the free NHL API used by production, so the metric is always neutral.
+- `otDefZoneTime` — Time in Defensive Zone / OT Game (overtime / 3-on-3 · status none · normalized score; no raw measurement · higher is better). Time in the defensive zone per overtime game is not exposed by the free NHL API used by production, so the metric is always neutral.
+- `otTalent` — Individual Talent Quality (OT) (overtime / 3-on-3 · status proxy · points per game, summed across two players · higher is better). Uses the sum of the best forward's and best defenseman's points per game as a proxy for individual overtime talent.
+- `soWinRatio` — SO Win Ratio (wins / opportunities) (overtime / Shootout · status real · ratio from 0 to 1 · higher is better). Measures the share of shootout opportunities won.
+- `soScorers` — Number of Different Scorers (overtime / Shootout · status real · players · higher is better). Counts skaters with at least one shootout goal.
+- `soTalent` — Individual Talent Quality (SO) (overtime / Shootout · status real · shooting ratio from 0 to 1 · higher is better). Uses team shootout shooting percentage among skaters with shootout attempts.
+- `soSavePct` — Team Shootout Save Percentage (overtime / Shootout · status real · save percentage from 0 to 1 · higher is better). Uses the team's official shootout save percentage.
+- `opponentAdjusted` — Opponent Strength (Avg Opponent Power) (opponents · status real · standardized 0-100 section score and multiplier · higher is better). Derives opponent strength from the current power scores of teams played, then exposes both a standardized opponent section score and the bounded factor used by the final score.
+- `globalOtWinRatio` — OT Wins Ratio (global · status real · production ratio from 0 to 1 · higher is better). Uses the same OT-only numerator and standing overtime-loss denominator as the overtime section.
+- `regulationWinRatio` — Regulation Win Ratio (global · status real · ratio from 0 to 1 · higher is better). Measures the share of games won in regulation.
+- `globalSoWinRatio` — SO Win Ratio (global · status real · ratio from 0 to 1 · higher is better). Uses the share of shootout opportunities won from the season standing.
+- `comebackWins` — Comeback Wins (global · status real · comeback wins · higher is better). Counts wins after the team trailed at any point in a game.
+- `twoGoalsComebackWins` — 2-Goal Comeback Wins (global · status real · comeback wins · higher is better). Counts wins after the team trailed by at least two goals.
+- `last5MinComebacks` — Last 5-Minute Comeback Wins (global · status real · comeback wins · higher is better). Counts wins where the team was trailing at the five-minute checkpoint in the third period, inferred from the last scoring event at or before 5:00.
+- `powerplayImpacts` — Powerplay Impacts (global · status real · powerplay share of non-shorthanded goals · lower is better). Uses the share of non-shorthanded goals scored on the powerplay; teams relying less on the powerplay rank higher.
+- `penaltyKillImpacts` — Penalty Kill Impacts (global · status real · non-powerplay, non-shorthanded residual share of goals against · higher is better). Uses the share of goals against remaining after shorthanded and powerplay goals are removed; the residual can include empty-net goals.
+- `winHighScoringChances` — Losses Despite High Scoring Chances (global · status real · losses despite high-scoring chances · higher is better). Counts losses where the team's play-by-play expected-goal proxy exceeded the opponent's actual goals.
+
+## Repository files
+
+- [Quickstart](https://github.com/raglab-ca/sports/blob/main/docs/quickstart.md): six steps from API key to first tool call.
+- [Full context](https://github.com/raglab-ca/sports/blob/main/llms-full.txt): server instructions, every tool parameter, prompts, resources, and the redacted metric list.
+- [Developer setup](https://github.com/raglab-ca/sports/blob/main/docs/developers.md): API keys, client config, the result envelope, and error codes.
+- [Tool catalog](https://github.com/raglab-ca/sports/blob/main/docs/tools.md): every MCP tool with its parameters.
+- [Sample responses](https://github.com/raglab-ca/sports/blob/main/docs/samples.md): complete example payloads for common tools.
+- [Metric definitions](https://github.com/raglab-ca/sports/blob/main/docs/metrics.md): what each metric represents, unit, and direction.
+- [Glossary](https://github.com/raglab-ca/sports/blob/main/docs/glossary.md): freshness, identifiers, and methodology notes.
+- [Client examples](https://github.com/raglab-ca/sports/tree/main/examples): minimal JavaScript and Python MCP clients.

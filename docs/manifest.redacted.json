@@ -1,0 +1,871 @@
+{
+  "version": "1.4.0",
+  "metricCount": 78,
+  "sectionCount": 7,
+  "statuses": {
+    "real": "Computed from official NHL data.",
+    "proxy": "Computed from a documented proxy for a stat the free NHL API does not expose.",
+    "none": "Not exposed by the free NHL API; scored as a neutral 50."
+  },
+  "sections": [
+    {
+      "key": "frontOffice",
+      "label": "Front Office",
+      "metricCount": 7,
+      "description": "Roster construction and front-office context signals.",
+      "subsections": []
+    },
+    {
+      "key": "coaching",
+      "label": "Coaching",
+      "metricCount": 6,
+      "description": "Preparation, line continuity, and in-game response signals.",
+      "subsections": []
+    },
+    {
+      "key": "offense",
+      "label": "Offense",
+      "metricCount": 19,
+      "description": "Five-on-five and powerplay offensive production.",
+      "subsections": [
+        {
+          "label": "5-on-5",
+          "metricCount": 14
+        },
+        {
+          "label": "Powerplay",
+          "metricCount": 5
+        }
+      ]
+    },
+    {
+      "key": "defense",
+      "label": "Defense",
+      "metricCount": 24,
+      "description": "Five-on-five and penalty-kill defensive suppression.",
+      "subsections": [
+        {
+          "label": "5-on-5",
+          "metricCount": 19
+        },
+        {
+          "label": "Powerplay / Penalty Kill",
+          "metricCount": 5
+        }
+      ]
+    },
+    {
+      "key": "overtime",
+      "label": "Overtime",
+      "metricCount": 12,
+      "description": "Three-on-three and shootout outcomes.",
+      "subsections": [
+        {
+          "label": "3-on-3",
+          "metricCount": 8
+        },
+        {
+          "label": "Shootout",
+          "metricCount": 4
+        }
+      ]
+    },
+    {
+      "key": "opponents",
+      "label": "Opponents",
+      "metricCount": 1,
+      "description": "Schedule-strength context derived from opponents' current power.",
+      "subsections": []
+    },
+    {
+      "key": "global",
+      "label": "Global",
+      "metricCount": 9,
+      "description": "Outcome, comeback, and special-team impact signals.",
+      "subsections": []
+    }
+  ],
+  "metrics": [
+    {
+      "key": "capSpace",
+      "label": "Cap Space",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Cap space is not available from the free NHL API used by production, so the metric is always neutral.",
+      "unit": "normalized score; no raw measurement",
+      "direction": "higher",
+      "status": "none"
+    },
+    {
+      "key": "depth",
+      "label": "Depth",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Counts skaters with at least 20 points in the current target-season skater report.",
+      "unit": "skaters",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "lineupStability",
+      "label": "Lineup Stability",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Measures how uneven regular-skater participation is; less dispersion around the mean is better.",
+      "unit": "coefficient of variation",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "experience",
+      "label": "Team Experience in Playoffs",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Uses average derived NHL seasons of experience among regular skaters as a proxy for playoff experience.",
+      "unit": "years",
+      "direction": "higher",
+      "status": "proxy"
+    },
+    {
+      "key": "avgAge",
+      "label": "Player Average Age",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Uses the current calendar age of regular skaters and applies a bell-shaped score centered at the production ideal.",
+      "unit": "years",
+      "direction": "bellShaped",
+      "status": "real"
+    },
+    {
+      "key": "avgHeight",
+      "label": "Team Average Height",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Averages the reported heights of regular skaters; taller is higher under the production direction.",
+      "unit": "inches",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "avgWeight",
+      "label": "Team Average Weight",
+      "sectionKey": "frontOffice",
+      "subsection": null,
+      "description": "Averages the reported weights of regular skaters; heavier is higher under the production direction.",
+      "unit": "pounds",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "lineStability",
+      "label": "Line Stability",
+      "sectionKey": "coaching",
+      "subsection": null,
+      "description": "Uses average games played by the top six forwards and top four defensemen as a proxy for stable core lines and pairs.",
+      "unit": "games played",
+      "direction": "higher",
+      "status": "proxy"
+    },
+    {
+      "key": "wonCoachChallenges",
+      "label": "Won Coach Challenges",
+      "sectionKey": "coaching",
+      "subsection": null,
+      "description": "Won coach challenges are not exposed by the free NHL API used by production, so the metric is always neutral.",
+      "unit": "normalized score; no raw measurement",
+      "direction": "higher",
+      "status": "none"
+    },
+    {
+      "key": "emptyNetSuccess",
+      "label": "Empty-Net Goals per Game (Proxy)",
+      "sectionKey": "coaching",
+      "subsection": null,
+      "description": "Uses empty-net goals per team game as the production proxy for empty-net success.",
+      "unit": "empty-net goals per game",
+      "direction": "higher",
+      "status": "proxy"
+    },
+    {
+      "key": "comebackAfterTimeout",
+      "label": "Goals within 5 min after Coach Timeout",
+      "sectionKey": "coaching",
+      "subsection": null,
+      "description": "Counts goals scored within five minutes after one of the team's own coach timeouts.",
+      "unit": "goals",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "first10MinutesGoals",
+      "label": "First 10 Minutes Goals For/Against",
+      "sectionKey": "coaching",
+      "subsection": null,
+      "description": "Measures the share of first-ten-minute regulation goals scored for the team.",
+      "unit": "ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "threePlusGoalRoutes",
+      "label": "3+ Goal Routes (Blowout Losses)",
+      "sectionKey": "coaching",
+      "subsection": null,
+      "description": "Counts losses that were routes by at least three goals after removing the opponent's empty-net goals.",
+      "unit": "blowout losses",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "top5Ratio",
+      "label": "Top 5 Players Production Ratio",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Measures the share of team skater points produced by the five highest-point skaters.",
+      "unit": "ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "top9Fwd",
+      "label": "Average Points Top 9 Forwards",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Averages points among the nine highest-point forwards, with a single-game availability override when supplied.",
+      "unit": "points per forward",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "top4D",
+      "label": "Average Points Top 4 Defensemen",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Averages points among the four highest-point defensemen, with a single-game availability override when supplied.",
+      "unit": "points per defenseman",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "bottom6Fwd",
+      "label": "Bottom-6 Forwards Points/Game",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Averages points per game among the forwards ranked 7-12 by ice time per game (the third and fourth lines), with a single-game availability override when supplied.",
+      "unit": "points per game per bottom-six forward",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "bottomPairD",
+      "label": "Bottom-Pair Defensemen Points/Game",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Averages points per game among the defensemen ranked 5-6 by ice time per game (the third pair), with a single-game availability override when supplied.",
+      "unit": "points per game per bottom-pair defenseman",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "shotsPerGame",
+      "label": "Shots / Game",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Uses official team shots on goal per game, with a play-by-play fallback for a new or incomplete season.",
+      "unit": "shots on goal per game",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "scoringChances",
+      "label": "Scoring Chances / Game",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Counts all parsed play-by-play shot attempts—goals, shots on goal, missed shots, and blocked shots—whose production danger value is at least 0.1 and divides by games played.",
+      "unit": "scoring chances per game",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "shotAttemptsPerGame",
+      "label": "Shot Attempts / Game",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Uses total shot attempts from the official realtime report, with a play-by-play fallback when the summary is unavailable.",
+      "unit": "shot attempts per game",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "shotQuality",
+      "label": "Shot Quality (avg danger/attempt)",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Averages the production play-by-play danger value assigned to the team's shot attempts.",
+      "unit": "danger value per shot attempt",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "plusMinus",
+      "label": "Plus/Minus Overall",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Sums the plus/minus values of the team's skaters.",
+      "unit": "plus/minus points",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "offZoneTime",
+      "label": "Shot-Attempt Share (Off Zone Proxy)",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Uses shot-attempt share as the production proxy for time in the offensive zone.",
+      "unit": "shot-attempt share from 0 to 1",
+      "direction": "higher",
+      "status": "proxy"
+    },
+    {
+      "key": "timeWithLead",
+      "label": "Time with the Lead",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Averages regulation time spent holding a lead across the team's games.",
+      "unit": "hours per game",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "comeback2Plus",
+      "label": "Comebacks from 2+ Goal Deficit",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Counts wins after the team trailed by at least two goals.",
+      "unit": "comeback wins",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "comebacks3rd",
+      "label": "Comebacks in 3rd Periods",
+      "sectionKey": "offense",
+      "subsection": "5-on-5",
+      "description": "Counts wins after the team trailed during the third period.",
+      "unit": "comeback wins",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "ppGoalsPerMin",
+      "label": "Goals / Powerplay Minute",
+      "sectionKey": "offense",
+      "subsection": "Powerplay",
+      "description": "Measures powerplay goals per powerplay minute.",
+      "unit": "powerplay goals per powerplay minute",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "ppPointsPerMin",
+      "label": "Points / Powerplay Minute",
+      "sectionKey": "offense",
+      "subsection": "Powerplay",
+      "description": "Measures powerplay points (goals plus assists) per powerplay minute. This is the creation half of the powerplay: goals alone score finishing, and the unit's best passer generates them without scoring them.",
+      "unit": "powerplay points per powerplay minute",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "ppTop5Ratio",
+      "label": "Top 5 Production Ratio vs Team (PP)",
+      "sectionKey": "offense",
+      "subsection": "Powerplay",
+      "description": "Measures the share of team powerplay points produced by the five highest-point powerplay skaters; concentration is lower-is-better.",
+      "unit": "ratio from 0 to 1",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "ppTop2DRatio",
+      "label": "Top 2 Defensemen Production vs Team (PP)",
+      "sectionKey": "offense",
+      "subsection": "Powerplay",
+      "description": "Measures the share of team powerplay points produced by the two highest-point defensemen; concentration is lower-is-better.",
+      "unit": "ratio from 0 to 1",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "shGoalsAgainst",
+      "label": "Shorthanded Goals Allowed",
+      "sectionKey": "offense",
+      "subsection": "Powerplay",
+      "description": "Measures shorthanded goals allowed—goals against while the opponent is shorthanded—per game; fewer is better.",
+      "unit": "shorthanded goals against per game",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppShotsPerGame",
+      "label": "Opponent Shots / Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Measures shots on goal allowed per game, with a play-by-play fallback.",
+      "unit": "shots on goal against per game",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "goalAgainstPerGame",
+      "label": "Goals Against / Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Measures goals allowed per game, with a play-by-play fallback.",
+      "unit": "goals against per game",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppTop9Fwd",
+      "label": "Opp Average Points Top 9 Forwards",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Computes the opponent-weighted average points per opponent top-nine forward using actual games played against each opponent when available.",
+      "unit": "opponent points per top-nine forward",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "oppTop4D",
+      "label": "Opp Average Points Top 4 Defensemen",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Computes the opponent-weighted average points per opponent top-four defenseman using actual games played against each opponent when available.",
+      "unit": "opponent points per top-four defenseman",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "oppScoringChances",
+      "label": "Opp Scoring Chances / Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Measures opponent scoring chances allowed per game.",
+      "unit": "opponent scoring chances per game",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppShotAttemptsPerGame",
+      "label": "Opp Shot Attempts / Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Measures opponent shot attempts allowed per game, with a play-by-play fallback.",
+      "unit": "opponent shot attempts per game",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppShotQuality",
+      "label": "Opponent Shot Quality (allowed)",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Averages the production danger value of shot attempts allowed.",
+      "unit": "danger value per allowed shot attempt",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppPlusMinus",
+      "label": "Team Plus/Minus (Opponent Context; Audit)",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Uses the negative of the team's skater plus/minus as raw input and then applies lower-is-better normalization.",
+      "unit": "negative plus/minus points",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppZoneTime",
+      "label": "Opponent Shot-Attempt Share (Zone Proxy)",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Uses opponent shot-attempt share as the production proxy for opponent offensive-zone time.",
+      "unit": "opponent shot-attempt share from 0 to 1",
+      "direction": "lower",
+      "status": "proxy"
+    },
+    {
+      "key": "oppTimeWithLead",
+      "label": "Opp Time with the Lead",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Averages regulation time the opponent spent holding a lead, which is the team's trailing time.",
+      "unit": "hours per game",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppComeback2Plus",
+      "label": "Opp Comebacks from 2+ Goal Deficit",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Counts opponent wins after the opponent trailed by at least two goals against this team.",
+      "unit": "opponent comeback wins",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "oppComebacks3rd",
+      "label": "Opp Comebacks in 3rd Periods",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Counts opponent wins after the opponent trailed during the third period against this team.",
+      "unit": "opponent comeback wins",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "backupGaa",
+      "label": "Auxiliary Goalie Goal Against Ratio",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Uses the announced non-main goalie's GAA when available; otherwise weights backup goalies' GAA by games played.",
+      "unit": "goals against average",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "starterShare",
+      "label": "Primary Goalie Game Ratio",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Measures the starting goalie's share of team games started, with an announced alternate override.",
+      "unit": "share from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "plusMinusDefense",
+      "label": "Team Plus/Minus (Defense Context; Duplicate)",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Sums the team's skater plus/minus values in the defense section; higher is the production direction.",
+      "unit": "plus/minus points",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "bottom6FwdDefense",
+      "label": "Bottom-6 Forwards Plus/Minus per Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Averages plus/minus per game among the forwards ranked 7-12 by ice time per game (the third and fourth lines), with a single-game availability override when supplied.",
+      "unit": "plus/minus per game per bottom-six forward",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "bottomPairDDefense",
+      "label": "Bottom-Pair Defensemen Plus/Minus per Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Averages plus/minus per game among the defensemen ranked 5-6 by ice time per game (the third pair), with a single-game availability override when supplied.",
+      "unit": "plus/minus per game per bottom-pair defenseman",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "blockedShots",
+      "label": "Blocked Shots / Game",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Measures total blocked shots per game from the realtime team report.",
+      "unit": "blocked shots per game",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "shutouts",
+      "label": "Shut Outs",
+      "sectionKey": "defense",
+      "subsection": "5-on-5",
+      "description": "Uses the team's total shutouts from the season summary.",
+      "unit": "shutouts",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "pkGoalsPerMin",
+      "label": "Goals Allowed / PK Minute",
+      "sectionKey": "defense",
+      "subsection": "Powerplay / Penalty Kill",
+      "description": "Measures goals allowed per penalty-kill minute.",
+      "unit": "goals allowed per penalty-kill minute",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "pkShotsPerMin",
+      "label": "Shorthanded Opportunities / PK Minute (Proxy)",
+      "sectionKey": "defense",
+      "subsection": "Powerplay / Penalty Kill",
+      "description": "Uses shorthanded opportunities per penalty-kill minute as the production proxy for shots allowed per penalty-kill minute.",
+      "unit": "shorthanded opportunities per penalty-kill minute",
+      "direction": "lower",
+      "status": "proxy"
+    },
+    {
+      "key": "pkTime",
+      "label": "Penalty-Kill TOI per Game (Def Zone Proxy)",
+      "sectionKey": "defense",
+      "subsection": "Powerplay / Penalty Kill",
+      "description": "Uses penalty-kill ice time per game as the production proxy for time in the defensive zone on the penalty kill.",
+      "unit": "penalty-kill seconds per game",
+      "direction": "lower",
+      "status": "proxy"
+    },
+    {
+      "key": "pkBlockedShots",
+      "label": "Blocked Shots / Game (PK)",
+      "sectionKey": "defense",
+      "subsection": "Powerplay / Penalty Kill",
+      "description": "Scales total blocked shots per game by the team's penalty-kill share of its three major special-team/5-on-5 time components.",
+      "unit": "blocked shots per game scaled to PK workload",
+      "direction": "higher",
+      "status": "proxy"
+    },
+    {
+      "key": "shGoalsFor",
+      "label": "Shorthanded Goals Scored",
+      "sectionKey": "defense",
+      "subsection": "Powerplay / Penalty Kill",
+      "description": "Uses total shorthanded goals scored across the target season.",
+      "unit": "shorthanded goals",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "otWinRatio",
+      "label": "OT Win Ratio (wins / opportunities)",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Measures OT-only wins over a denominator that still includes standing overtime losses, which may include shootout losses.",
+      "unit": "production ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "otTop3GoalShare",
+      "label": "Goals by Top 3 Players / Whole Team (OT)",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Measures the share of team overtime goals scored by its top three overtime scorers.",
+      "unit": "ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "otDifferentScorers",
+      "label": "Number of Different Goal Scorers (OT)",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Counts distinct players with a recorded overtime goal.",
+      "unit": "players",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "otShots",
+      "label": "Shots / OT",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Measures OT shot-on-goal events for per overtime game; goals are excluded by the current parser.",
+      "unit": "OT shot-on-goal events per overtime game, excluding goals",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "otShotsAgainst",
+      "label": "Shots Against / OT",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Measures OT shot-on-goal events against per overtime game; goals are excluded by the current parser.",
+      "unit": "OT shot-on-goal events against per overtime game, excluding goals",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "otOffZoneTime",
+      "label": "Time in Offensive Zone / OT Game",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Time in the offensive zone per overtime game is not exposed by the free NHL API used by production, so the metric is always neutral.",
+      "unit": "normalized score; no raw measurement",
+      "direction": "higher",
+      "status": "none"
+    },
+    {
+      "key": "otDefZoneTime",
+      "label": "Time in Defensive Zone / OT Game",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Time in the defensive zone per overtime game is not exposed by the free NHL API used by production, so the metric is always neutral.",
+      "unit": "normalized score; no raw measurement",
+      "direction": "higher",
+      "status": "none"
+    },
+    {
+      "key": "otTalent",
+      "label": "Individual Talent Quality (OT)",
+      "sectionKey": "overtime",
+      "subsection": "3-on-3",
+      "description": "Uses the sum of the best forward's and best defenseman's points per game as a proxy for individual overtime talent.",
+      "unit": "points per game, summed across two players",
+      "direction": "higher",
+      "status": "proxy"
+    },
+    {
+      "key": "soWinRatio",
+      "label": "SO Win Ratio (wins / opportunities)",
+      "sectionKey": "overtime",
+      "subsection": "Shootout",
+      "description": "Measures the share of shootout opportunities won.",
+      "unit": "ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "soScorers",
+      "label": "Number of Different Scorers",
+      "sectionKey": "overtime",
+      "subsection": "Shootout",
+      "description": "Counts skaters with at least one shootout goal.",
+      "unit": "players",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "soTalent",
+      "label": "Individual Talent Quality (SO)",
+      "sectionKey": "overtime",
+      "subsection": "Shootout",
+      "description": "Uses team shootout shooting percentage among skaters with shootout attempts.",
+      "unit": "shooting ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "soSavePct",
+      "label": "Team Shootout Save Percentage",
+      "sectionKey": "overtime",
+      "subsection": "Shootout",
+      "description": "Uses the team's official shootout save percentage.",
+      "unit": "save percentage from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "opponentAdjusted",
+      "label": "Opponent Strength (Avg Opponent Power)",
+      "sectionKey": "opponents",
+      "subsection": null,
+      "description": "Derives opponent strength from the current power scores of teams played, then exposes both a standardized opponent section score and the bounded factor used by the final score.",
+      "unit": "standardized 0-100 section score and multiplier",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "globalOtWinRatio",
+      "label": "OT Wins Ratio",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Uses the same OT-only numerator and standing overtime-loss denominator as the overtime section.",
+      "unit": "production ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "regulationWinRatio",
+      "label": "Regulation Win Ratio",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Measures the share of games won in regulation.",
+      "unit": "ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "globalSoWinRatio",
+      "label": "SO Win Ratio",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Uses the share of shootout opportunities won from the season standing.",
+      "unit": "ratio from 0 to 1",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "comebackWins",
+      "label": "Comeback Wins",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Counts wins after the team trailed at any point in a game.",
+      "unit": "comeback wins",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "twoGoalsComebackWins",
+      "label": "2-Goal Comeback Wins",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Counts wins after the team trailed by at least two goals.",
+      "unit": "comeback wins",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "last5MinComebacks",
+      "label": "Last 5-Minute Comeback Wins",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Counts wins where the team was trailing at the five-minute checkpoint in the third period, inferred from the last scoring event at or before 5:00.",
+      "unit": "comeback wins",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "powerplayImpacts",
+      "label": "Powerplay Impacts",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Uses the share of non-shorthanded goals scored on the powerplay; teams relying less on the powerplay rank higher.",
+      "unit": "powerplay share of non-shorthanded goals",
+      "direction": "lower",
+      "status": "real"
+    },
+    {
+      "key": "penaltyKillImpacts",
+      "label": "Penalty Kill Impacts",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Uses the share of goals against remaining after shorthanded and powerplay goals are removed; the residual can include empty-net goals.",
+      "unit": "non-powerplay, non-shorthanded residual share of goals against",
+      "direction": "higher",
+      "status": "real"
+    },
+    {
+      "key": "winHighScoringChances",
+      "label": "Losses Despite High Scoring Chances",
+      "sectionKey": "global",
+      "subsection": null,
+      "description": "Counts losses where the team's play-by-play expected-goal proxy exceeded the opponent's actual goals.",
+      "unit": "losses despite high-scoring chances",
+      "direction": "higher",
+      "status": "real"
+    }
+  ],
+  "note": "Public definitions only. Scoring formulas, normalization, aggregation, weights, data sources, and update internals are not published."
+}
