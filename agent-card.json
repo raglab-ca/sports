@@ -1,0 +1,242 @@
+{
+  "name": "raglab-nhl-analytics",
+  "description": "Provides quantitative NHL power ratings, team disparity models, player impact scores, and playoff simulation probabilities through a read-only MCP server.",
+  "url": "https://sports.raglab.services",
+  "version": "2.1.0",
+  "protocol": "mcp",
+  "mcp_endpoint": "https://sports.raglab.services/mcp",
+  "transport": "streamable-http",
+  "auth_required": true,
+  "provider": {
+    "organization": "RagLab",
+    "url": "https://sports.raglab.services"
+  },
+  "documentationUrl": "https://sports.raglab.services/llms.txt",
+  "iconUrl": "https://sports.raglab.services/icons/icon-512.png",
+  "supportedInterfaces": [
+    {
+      "url": "https://sports.raglab.services/mcp",
+      "protocolBinding": "MCP",
+      "protocolVersion": "2025-11-25"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false,
+    "tools": true,
+    "prompts": true,
+    "resources": true
+  },
+  "defaultInputModes": [
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "securitySchemes": {
+    "bearerAuth": {
+      "type": "http",
+      "scheme": "bearer",
+      "bearerFormat": "pr_live_<key>",
+      "description": "API key from https://sports.raglab.services/developers (Pro plan); read-only access."
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "skills": [
+    {
+      "id": "power",
+      "name": "Power model",
+      "description": "Power metrics, history, cohort, similarity, and outlier analysis",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_power_rankings",
+        "get_team_power_breakdown",
+        "get_metric_league",
+        "get_power_matrix",
+        "compare_cohorts",
+        "find_similar_teams",
+        "find_metric_outliers",
+        "get_power_history",
+        "get_metric_history",
+        "get_section_history",
+        "explain_power_change"
+      ],
+      "examples": [
+        "Rank all NHL teams by power score",
+        "Which teams are outliers on the penalty kill?"
+      ]
+    },
+    {
+      "id": "players",
+      "name": "Players & value",
+      "description": "Player dossiers, salary and contract value, and Power Above Average",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_player_profile",
+        "get_team_paa",
+        "get_paa_leaders"
+      ],
+      "examples": [
+        "How much does Connor McDavid add to the Oilers?",
+        "Which players are the best value per cap dollar?"
+      ]
+    },
+    {
+      "id": "teams",
+      "name": "Teams",
+      "description": "Season games, metric and projection histories, and schedule strength",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_team_games",
+        "get_team_metrics",
+        "get_team_projections",
+        "get_schedule_strength"
+      ],
+      "examples": [
+        "Show Toronto's game-by-game power trend",
+        "Which teams have the toughest remaining schedule?"
+      ]
+    },
+    {
+      "id": "games",
+      "name": "Games & markets",
+      "description": "Projections, scenarios, official evidence, impacts, and market history",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_games",
+        "get_game_analysis",
+        "project_matchup",
+        "project_scenario",
+        "find_value_bets",
+        "get_game_impact",
+        "get_market_history",
+        "get_game_evidence"
+      ],
+      "examples": [
+        "Project tonight's TOR vs MTL matchup",
+        "Find model-market disagreements for tomorrow's slate"
+      ]
+    },
+    {
+      "id": "live",
+      "name": "Live & pregame",
+      "description": "Live game state, situation model, commentary, live edges, and pregame availability",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_live_game",
+        "get_game_situation",
+        "get_live_edge",
+        "get_game_commentary",
+        "get_pregame_availability"
+      ],
+      "examples": [
+        "What are the live win probabilities in this game?",
+        "Who are the announced starting goalies tonight?"
+      ]
+    },
+    {
+      "id": "standings",
+      "name": "Standings",
+      "description": "Official tables, power standings, and the projected playoff picture",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_official_standings",
+        "get_power_standings",
+        "get_playoff_bracket",
+        "get_playoff_picture"
+      ],
+      "examples": [
+        "Show the projected playoff bracket",
+        "Where does the power model disagree with the standings?"
+      ]
+    },
+    {
+      "id": "simulations",
+      "name": "Simulations",
+      "description": "Stored season simulations, game by game",
+      "tags": [
+        "nhl",
+        "hockey",
+        "list_simulations",
+        "get_simulation",
+        "get_simulation_games",
+        "get_projected_standings"
+      ],
+      "examples": [
+        "Show the projected final standings",
+        "What are each team's playoff odds?"
+      ]
+    },
+    {
+      "id": "scenarios",
+      "name": "Scenarios",
+      "description": "Saved what-if experiments the caller owns and can recompute",
+      "tags": [
+        "nhl",
+        "hockey",
+        "list_scenarios",
+        "get_scenario",
+        "create_scenario",
+        "run_scenario",
+        "get_scenario_run"
+      ]
+    },
+    {
+      "id": "nhl",
+      "name": "NHL data",
+      "description": "Base data ingested from the official NHL APIs",
+      "tags": [
+        "nhl",
+        "hockey",
+        "list_teams",
+        "get_team_stats",
+        "get_team_roster",
+        "get_schedule"
+      ],
+      "examples": [
+        "List NHL teams with their records",
+        "Show the Bruins roster and injuries"
+      ]
+    },
+    {
+      "id": "news",
+      "name": "News",
+      "description": "Aggregated NHL headlines by team and player",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_news"
+      ],
+      "examples": [
+        "Latest NHL headlines about the Montreal Canadiens"
+      ]
+    },
+    {
+      "id": "meta",
+      "name": "Reference",
+      "description": "Algorithm definitions and season metadata",
+      "tags": [
+        "nhl",
+        "hockey",
+        "get_metric_definitions",
+        "get_model_manifest",
+        "get_seasons"
+      ],
+      "examples": [
+        "List every power metric with its formula",
+        "What seasons have stored data?"
+      ]
+    }
+  ]
+}
